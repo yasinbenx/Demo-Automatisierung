@@ -113,7 +113,7 @@ export default function DashboardPage() {
       <div className="dashboard-header">
         <div>
           <h1>Willkommen zurück, {config.ownerName} 👋</h1>
-          <p>Hier ist dein Überblick für {config.businessName}.</p>
+          <p>Hier ist Ihr Überblick für {config.businessName}.</p>
         </div>
         <button className="btn btn--primary" onClick={() => setShowForm((v) => !v)}>
           {showForm ? "Schließen" : "+ Termin hinzufügen"}
