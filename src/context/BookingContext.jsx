@@ -1,19 +1,8 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import config from "../config.js";
+import { fillTemplate, formatDate } from "../utils/template.js";
 
 const BookingContext = createContext(null);
-
-function fillTemplate(template, values) {
-  return Object.entries(values).reduce(
-    (text, [key, value]) => text.replaceAll(`{${key}}`, value),
-    template
-  );
-}
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" });
-}
 
 const initialAppointments = [
   {
@@ -106,7 +95,7 @@ export function BookingProvider({ children }) {
       ...prev,
     ]);
 
-    return appointment;
+    return { ...appointment, confirmationText };
   }
 
   const value = useMemo(

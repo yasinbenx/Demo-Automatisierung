@@ -205,21 +205,19 @@ export default function BookingPage() {
           <div className="confirmation__check">✓</div>
           <h2>Termin bestätigt!</h2>
           <p>
-            Danke, {confirmedAppointment.customerName}! Dein Termin für{" "}
+            Danke, {confirmedAppointment.customerName}! Ihr Termin für{" "}
             <strong>{selectedService?.name}</strong> am{" "}
             {selectedDate?.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })} um{" "}
             {selectedTime} Uhr ist gebucht.
           </p>
 
           <WhatsAppPreview
-            label="So sieht deine Bestätigungsnachricht aus:"
-            text={`Hallo ${confirmedAppointment.customerName}! Dein Termin für ${selectedService?.name} am ${selectedDate?.toLocaleDateString(
-              "de-DE"
-            )} um ${selectedTime} Uhr bei ${config.businessName} ist bestätigt. Wir freuen uns auf dich! 💖`}
+            label="So sieht Ihre Bestätigungsnachricht aus:"
+            text={confirmedAppointment.confirmationText}
           />
 
           <p className="confirmation__note">
-            📲 {config.ownerName} und dein Team senden dir automatisch 24h vorher eine
+            📲 {config.ownerName} sendet Ihnen automatisch 24h vorher eine
             Erinnerung per WhatsApp — damit garantiert nichts vergessen wird.
           </p>
 

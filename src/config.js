@@ -6,13 +6,13 @@
 
 const config = {
   // --- Unternehmen ---------------------------------------------------
-  businessName: "ForYou cosmetics",
-  businessType: "Kosmetikstudio",
-  ownerName: "Nahida",
-  tagline: "Deine Beauty-Auszeit in Monheim am Rhein",
-  address: "Hauptstraße 12, 40789 Monheim am Rhein",
-  phone: "+49 176 12345678",
-  email: "info@foryou-cosmetics.de",
+  businessName: "Ihr Unternehmen",
+  businessType: "Kosmetikstudio / Friseur / Praxis",
+  ownerName: "Ihr Name",
+  tagline: "Online-Terminbuchung für Ihre Kundinnen und Kunden",
+  address: "Musterstraße 1, 12345 Musterstadt",
+  phone: "+49 123 4567890",
+  email: "kontakt@ihre-domain.de",
 
   // --- Design ----------------------------------------------------------
   // primaryColor bestimmt Buttons, Header, Akzente in der ganzen App.
@@ -21,14 +21,14 @@ const config = {
   // berechnet, falls nicht gesetzt (siehe utils/color.js).
   secondaryColor: "#8C6D46",
   // Logo als Emoji oder Initialen-Fallback, wenn kein Bild vorhanden ist.
-  logoEmoji: "💆‍♀️",
+  logoEmoji: "📅",
 
   // --- Dienstleistungen --------------------------------------------------
   services: [
-    { id: "s1", name: "Gesichtsbehandlung", duration: "60 min", durationMinutes: 60, price: "55€" },
-    { id: "s2", name: "Permanent Make-up", duration: "90 min", durationMinutes: 90, price: "120€" },
-    { id: "s3", name: "Wimpernverlängerung", duration: "45 min", durationMinutes: 45, price: "65€" },
-    { id: "s4", name: "Maniküre & Pediküre", duration: "50 min", durationMinutes: 50, price: "45€" },
+    { id: "s1", name: "Behandlung 1", duration: "60 min", durationMinutes: 60, price: "XX€" },
+    { id: "s2", name: "Behandlung 2", duration: "90 min", durationMinutes: 90, price: "XX€" },
+    { id: "s3", name: "Behandlung 3", duration: "45 min", durationMinutes: 45, price: "XX€" },
+    { id: "s4", name: "Behandlung 4", duration: "30 min", durationMinutes: 30, price: "XX€" },
   ],
 
   // --- Öffnungszeiten / Slot-Generierung --------------------------------
@@ -43,9 +43,9 @@ const config = {
   // --- Erinnerungs-Texte (Platzhalter werden ersetzt) -------------------
   messages: {
     confirmation:
-      "Hallo {customerName}! Dein Termin für {serviceName} am {date} um {time} Uhr bei {businessName} ist bestätigt. Wir freuen uns auf dich! 💖",
+      "Hallo {customerName}! Ihr Termin für {serviceName} am {date} um {time} Uhr bei {businessName} ist bestätigt. Wir freuen uns auf Sie!",
     reminder24h:
-      "Hi {customerName} 👋 Kurze Erinnerung: Morgen um {time} Uhr hast du deinen Termin für {serviceName} bei {businessName}. Bis bald!",
+      "Hallo {customerName} 👋 Kurze Erinnerung: Morgen um {time} Uhr haben Sie Ihren Termin für {serviceName} bei {businessName}. Bis bald!",
   },
 
   // --- Demo-Statistiken für das Dashboard --------------------------------

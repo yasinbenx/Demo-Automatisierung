@@ -2,8 +2,11 @@
 
 Demo-Web-App für ein Online-Buchungs- und Erinnerungstool für lokale
 Dienstleistungsbetriebe (Kosmetikstudios, Friseure, Massagepraxen,
-Fußpflege, Personal Trainer, Fahrschulen etc.). Gedacht als anpassbare
-Verkaufs-Demo pro potenziellem Kunden.
+Fußpflege, Personal Trainer, Fahrschulen etc.). Die Vorlage verwendet
+bewusst neutrale Platzhalter ("Ihr Unternehmen", "Ihr Name") statt eines
+erfundenen Firmennamens, damit sie sich als allgemeine Verkaufs-Demo für
+unterschiedliche potenzielle Kunden zeigen lässt, ohne wie für einen
+anderen Betrieb gebaut zu wirken.
 
 ## Für jeden neuen Kunden: nur `src/config.js` anpassen
 
@@ -16,14 +19,14 @@ Code etwas geändert werden.
 
 ```js
 const config = {
-  businessName: "ForYou cosmetics",
-  businessType: "Kosmetikstudio",
-  ownerName: "Nahida",
+  businessName: "Ihr Unternehmen",
+  businessType: "Kosmetikstudio / Friseur / Praxis",
+  ownerName: "Ihr Name",
   primaryColor: "#D4A574",
   services: [
-    { id: "s1", name: "Gesichtsbehandlung", duration: "60 min", durationMinutes: 60, price: "55€" },
+    { id: "s1", name: "Behandlung 1", duration: "60 min", durationMinutes: 60, price: "XX€" },
   ],
-  address: "Hauptstraße 12, 40789 Monheim am Rhein",
+  address: "Musterstraße 1, 12345 Musterstadt",
   // ... weitere Felder siehe src/config.js
 };
 ```
