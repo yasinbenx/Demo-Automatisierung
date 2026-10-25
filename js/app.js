@@ -1242,4 +1242,11 @@ applyTheme();
 render();
 if (!state.settings.onboarded) onboarding();
 
+// Offline-Betrieb
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
 export { state, persist, render, toast, openSheet, fromKey };
