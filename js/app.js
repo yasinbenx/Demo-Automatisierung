@@ -1,8 +1,8 @@
 import {
-  PRAYERS, load, save, dateKey, fromKey, addDays, weekdayIndex, startOfWeek,
-  getDay, ensureDay,
+  PRAYERS, load, save, clearAll, defaultState, normalize, dateKey, fromKey, addDays,
+  weekdayIndex, startOfWeek, getDay, ensureDay,
 } from './storage.js';
-import { quoteOfDay, PAUSE_DUAS } from './quotes.js';
+import { quoteOfDay, quoteById, PAUSE_DUAS } from './quotes.js';
 import { icon } from './icons.js';
 
 // ---------- Zustand ----------
@@ -416,18 +416,326 @@ function todayView(flash = {}) {
     </div>`;
 }
 
-// ---------- Platzhalter für die übrigen Screens ----------
+// ---------- Woche ----------
+
+const WD_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+const GRID_LABELS = { prayers: 'Gebete', gym: 'Bewegung', clear: null, money: 'Geld', reflection: 'Reflexion' };
+const SUMMARY_LABELS = { prayers: 'Alle fünf Gebete', gym: 'Bewegung', clear: null, money: 'Geld-Check', reflection: 'Tagesreflexion' };
+
+function lastSevenDays() {
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(new Date(today.getFullYear(), today.getMonth(), today.getDate()), i - 6);
+    const key = dateKey(date);
+    return { date, key, day: getDay(state, key), isToday: i === 6 };
+  });
+}
+
+function weekDot(id, d) {
+  const s = habitStatus(id, d.date, d.day);
+  const title = { done: 'geschafft', part: 'teilweise', rest: 'Ruhetag', open: 'offen' }[s];
+  if (s === 'part') {
+    const p = Math.round((prayerCount(d.day) / 5) * 100);
+    return `<span class="wdot part" style="--p:${p}%" title="${prayerCount(d.day)} von 5"></span>`;
+  }
+  return `<span class="wdot ${s}" title="${title}"></span>`;
+}
 
 function weekView() {
+  const days = lastSevenDays();
+  const habits = ['prayers', 'gym', 'clear', 'money', 'reflection'].filter(visible);
+  const label = (id, map) => map[id] ?? state.settings.clearName;
+  const counts = Object.fromEntries(habits.map((id) => [id, days.filter((d) => ['done', 'rest'].includes(habitStatus(id, d.date, d.day))).length]));
+  const first = days[0].date;
+  const last = days[6].date;
+  const range = first.getMonth() === last.getMonth()
+    ? `${first.getDate()}. bis ${last.getDate()}. ${MONTHS[last.getMonth()]}`
+    : `${first.getDate()}. ${MONTHS[first.getMonth()]} bis ${last.getDate()}. ${MONTHS[last.getMonth()]}`;
+
+  const prayersTotal = days.reduce((n, d) => n + prayerCount(d.day), 0);
+  const hardDays = days.filter((d) => d.day.hard).length;
+  const spent = days.reduce((n, d) => n + parseAmount(d.day.money.amount), 0);
+  const moods = days.filter((d) => d.day.mood > 0);
+  const avgMood = moods.length ? moods.reduce((n, d) => n + d.day.mood, 0) / moods.length : 0;
+  const good = days.filter((d) => d.day.good?.trim()).reverse();
+
+  const extra = {
+    prayers: `${prayersTotal} von 35 Gebeten`,
+    gym: 'Ruhetage zählen mit',
+    money: spent > 0 ? `${euro(spent)} ausgegeben` : '',
+    reflection: avgMood ? `Stimmung im Schnitt ${avgMood.toLocaleString('de-DE', { maximumFractionDigits: 1 })}` : '',
+    clear: '',
+  };
+
+  if (!habits.length) {
+    return `${hero('Deine Woche', range)}
+      <div class="stack"><div class="empty"><p>Gerade ist alles ausgeblendet.<br>In den Einstellungen kannst du es wieder einschalten.</p></div></div>`;
+  }
+
   return `
-    ${hero('Deine Woche', 'Die letzten 7 Tage.')}
-    <div class="stack"><div class="empty"><p>Die Wochenübersicht kommt im nächsten Schritt.</p></div></div>`;
+    ${hero('Deine Woche', range)}
+    <div class="stack">
+      <section class="card" aria-labelledby="h-grid">
+        <div class="card-head">
+          <div class="card-title"><span class="card-icon">${icon.week(18)}</span><h2 id="h-grid">Letzte 7 Tage</h2></div>
+        </div>
+        <div class="card-body">
+          <div class="wgrid" role="table" aria-label="Gewohnheiten der letzten 7 Tage">
+            <div class="wrow whead" role="row">
+              <span role="columnheader"></span>
+              ${days.map((d) => `
+                <span class="wday ${d.isToday ? 'today' : ''}" role="columnheader">
+                  <small>${WD_SHORT[weekdayIndex(d.date)]}</small>
+                  <b class="num">${d.date.getDate()}</b>
+                  <i class="${d.day.hard ? 'hard' : ''}"></i>
+                </span>`).join('')}
+              <span role="columnheader"></span>
+            </div>
+            ${habits.map((id) => `
+              <div class="wrow" role="row">
+                <span class="wlabel" role="rowheader">${esc(label(id, GRID_LABELS))}</span>
+                ${days.map((d) => `<span class="wcell" role="cell">${weekDot(id, d)}</span>`).join('')}
+                <span class="wcount num" role="cell">${counts[id]}/7</span>
+              </div>`).join('')}
+          </div>
+          <div class="legend">
+            <span><span class="wdot done"></span>geschafft</span>
+            ${habits.includes('prayers') ? '<span><span class="wdot part" style="--p:60%"></span>teilweise</span>' : ''}
+            ${habits.includes('gym') ? '<span><span class="wdot rest"></span>Ruhetag</span>' : ''}
+            ${hardDays ? '<span><i class="hard-key"></i>Mini-Ziel-Tag</span>' : ''}
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-sum">
+        <div class="card-head">
+          <div class="card-title"><span class="card-icon">${icon.today(18)}</span><h2 id="h-sum">So lief's</h2></div>
+        </div>
+        <div class="card-body sum-list">
+          ${habits.map((id) => `
+            <div class="sum-row">
+              <div class="sum-top">
+                <span>${esc(label(id, SUMMARY_LABELS))}</span>
+                <span><b class="num">${counts[id]}</b> von 7 Tagen</span>
+              </div>
+              <div class="bar"><span style="width:${(counts[id] / 7) * 100}%"></span></div>
+              ${extra[id] ? `<p class="muted small">${extra[id]}</p>` : ''}
+            </div>`).join('')}
+        </div>
+        ${hardDays ? `<div class="card-foot"><span>${hardDays === 1 ? 'Ein Tag lief' : `${hardDays} Tage liefen`} im Mini-Ziel-Modus. Mit erledigtem Mini-Ziel zählt so ein Tag überall als geschafft.</span></div>` : ''}
+      </section>
+
+      ${good.length ? `
+        <section class="card" aria-labelledby="h-good">
+          <div class="card-head">
+            <div class="card-title"><span class="card-icon">${icon.pen(18)}</span><h2 id="h-good">Was gut war</h2></div>
+          </div>
+          <div class="card-body good-list">
+            ${good.map((d) => `
+              <div class="good-item">
+                <span class="good-day">${d.isToday ? 'Heute' : WEEKDAYS[weekdayIndex(d.date)]}</span>
+                <p>${esc(d.day.good.trim())}</p>
+              </div>`).join('')}
+          </div>
+        </section>` : ''}
+    </div>`;
+}
+
+// ---------- Einstellungen ----------
+
+const MINI_TYPES = [
+  { id: 'prayer', label: 'Ein Gebet' },
+  { id: 'clear', label: 'Klar-Tag' },
+  { id: 'money', label: 'Geld-Check' },
+  { id: 'gym', label: 'Bewegung' },
+  { id: 'custom', label: 'Eigenes' },
+];
+
+const VISIBLE_ITEMS = [
+  { id: 'impulse', label: 'Tagesimpuls' },
+  { id: 'prayers', label: 'Gebete' },
+  { id: 'gym', label: 'Bewegung' },
+  { id: 'clear', label: null },
+  { id: 'money', label: 'Geld-Check' },
+  { id: 'reflection', label: 'Tagesreflexion' },
+];
+
+function toggle(on, action, id, label) {
+  return `
+    <button class="set-row" data-action="${action}" data-id="${id}" role="switch" aria-checked="${on}">
+      <span>${esc(label)}</span>
+      <span class="switch ${on ? 'on' : ''}" aria-hidden="true"><i></i></span>
+    </button>`;
+}
+
+function segmented(name, options, value) {
+  return `
+    <div class="seg" role="radiogroup">
+      ${options.map((o) => `<button class="${o.id === value ? 'on' : ''}" role="radio" aria-checked="${o.id === value}" data-action="${name}" data-id="${o.id}">${esc(o.label)}</button>`).join('')}
+    </div>`;
+}
+
+// Kurze-Pause-Auswertung
+const TIME_BUCKETS = [
+  { label: 'Morgens', from: 5, to: 11 },
+  { label: 'Mittags', from: 11, to: 14 },
+  { label: 'Nachmittags', from: 14, to: 18 },
+  { label: 'Abends', from: 18, to: 22 },
+  { label: 'Nachts', from: 22, to: 29 },
+];
+
+function topCounts(values, n = 4) {
+  const map = new Map();
+  for (const v of values) {
+    const k = String(v || '').trim();
+    if (!k) continue;
+    const key = k.toLowerCase();
+    const cur = map.get(key) || { label: k, n: 0 };
+    cur.n++;
+    map.set(key, cur);
+  }
+  return [...map.values()].sort((a, b) => b.n - a.n).slice(0, n);
+}
+
+function bars(items) {
+  if (!items.length) return '<p class="muted small">Noch nichts eingetragen.</p>';
+  const max = Math.max(...items.map((i) => i.n));
+  return items.map((i) => `
+    <div class="stat-row">
+      <span>${esc(i.label)}</span>
+      <div class="bar thin"><span style="width:${(i.n / max) * 100}%"></span></div>
+      <b class="num">${i.n}</b>
+    </div>`).join('');
+}
+
+function pauseStats() {
+  const list = state.pauses;
+  if (!list.length) {
+    return '<p class="muted">Noch keine Pausen. Wenn du nach einer Pause kurz festhältst, wo du warst und wie es dir ging, siehst du hier, wann es oft schwer wird.</p>';
+  }
+  const hours = list.map((p) => {
+    const h = parseInt(String(p.time || '').split(':')[0], 10);
+    return Number.isFinite(h) ? h : new Date(p.ts).getHours();
+  });
+  const times = TIME_BUCKETS.map((b) => ({
+    label: b.label,
+    n: hours.filter((h) => (h >= b.from && h < b.to) || (b.to > 24 && h + 24 >= b.from && h + 24 < b.to)).length,
+  })).filter((b) => b.n > 0).sort((a, b) => b.n - a.n);
+  const month = list.filter((p) => Date.now() - new Date(p.ts).getTime() < 30 * 86400000).length;
+  return `
+    <p class="muted small" style="margin-bottom:14px">${list.length === 1 ? 'Eine Pause' : `${list.length} Pausen`} insgesamt, ${month} in den letzten 30 Tagen.</p>
+    <p class="stat-head">Uhrzeit</p>
+    ${bars(times)}
+    <p class="stat-head">Orte</p>
+    ${bars(topCounts(list.map((p) => p.place)))}
+    <p class="stat-head">Gefühle</p>
+    ${bars(topCounts(list.map((p) => p.feeling)))}`;
 }
 
 function settingsView() {
+  const s = state.settings;
+  const m = s.miniGoal;
+  const favs = state.favorites.map(quoteById).filter(Boolean);
+
   return `
-    ${hero('Einstellungen', '')}
-    <div class="stack"><div class="empty"><p>Die Einstellungen kommen im nächsten Schritt.</p></div></div>`;
+    ${hero('Einstellungen', 'Deine Daten bleiben auf diesem Gerät.')}
+    <div class="stack">
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Mein Warum</h2></div></div>
+        <div class="card-body">
+          <p class="muted small" style="margin-bottom:10px">Steht oben, wenn der Tag schwer ist, nach einem Ausrutscher und nach einer Pause.</p>
+          <textarea class="field" data-setting="why" rows="3" maxlength="500" placeholder="Warum willst du wieder anfangen?">${esc(s.why)}</textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Mini-Ziel</h2></div></div>
+        <div class="card-body">
+          <p class="muted small" style="margin-bottom:12px">Das eine Ziel für Tage, an denen „Heute ist schwer“ an ist.</p>
+          <div class="chips">
+            ${MINI_TYPES.map((t) => `<button class="chip-btn ${m.type === t.id ? 'on' : ''}" data-action="mini-type" data-id="${t.id}" aria-pressed="${m.type === t.id}">${t.label}</button>`).join('')}
+          </div>
+          ${m.type === 'prayer' ? `
+            <p class="form-label" style="margin-top:16px">Welches Gebet?</p>
+            ${segmented('mini-prayer', PRAYERS.map((p) => ({ id: p.id, label: p.name })), miniPrayer().id)}` : ''}
+          ${m.type === 'custom' ? `
+            <label class="form-label" for="mini-label" style="margin-top:16px">Dein Mini-Ziel</label>
+            <input id="mini-label" class="field" data-setting="mini-label" value="${esc(m.label)}" maxlength="60" placeholder="z. B. 10 Minuten spazieren">` : ''}
+          <p class="muted small" style="margin-top:12px">Im Modus steht dann: <b>${esc(miniLabel())}</b></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Gewohnheiten</h2></div></div>
+        <div class="set-list">
+          ${VISIBLE_ITEMS.map((v) => toggle(visible(v.id), 'visible', v.id, v.label ?? s.clearName)).join('')}
+        </div>
+        <div class="card-body" style="padding-top:6px">
+          <label class="form-label" for="clear-name" style="margin-top:4px">Name für ${esc(s.clearName)}</label>
+          <input id="clear-name" class="field" data-setting="clear-name" value="${esc(s.clearName)}" maxlength="24" placeholder="Klar-Tage">
+          <p class="muted small" style="margin-top:6px">Nimm einen Namen, der für dich passt und für andere nichts verrät.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Gym-Tage</h2></div></div>
+        <div class="card-body">
+          <div class="weekdays">
+            ${WD_SHORT.map((d, i) => `<button class="wd-btn ${s.gymDays[i] ? 'on' : ''}" data-action="gym-day" data-id="${i}" aria-pressed="${!!s.gymDays[i]}" aria-label="${WEEKDAYS[i]}">${d}</button>`).join('')}
+          </div>
+          <p class="muted small" style="margin-top:10px">${s.gymDays.filter(Boolean).length} Gym-Tage pro Woche. Die anderen sind Ruhetage und zählen nicht als verpasst.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Aussehen</h2></div></div>
+        <div class="card-body">
+          ${segmented('theme', [{ id: 'system', label: 'Automatisch' }, { id: 'light', label: 'Hell' }, { id: 'dark', label: 'Dunkel' }], s.theme)}
+        </div>
+        <div class="set-list" style="padding-top:0">
+          ${toggle(s.impulsePhoto, 'impulse-photo', 'photo', 'Bild hinter dem Tagesimpuls')}
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title"><h2>Favoriten</h2></div>
+          <div class="card-meta">${favs.length || ''}</div>
+        </div>
+        <div class="card-body">
+          ${favs.length ? favs.map((q) => `
+            <div class="fav">
+              <div>
+                ${q.ar ? `<p class="ar fav-ar">${q.ar}</p>` : ''}
+                <p>${esc(q.text)}</p>
+                <p class="muted small">${esc(q.source)}</p>
+              </div>
+              <button class="heart on" data-action="fav-remove" data-id="${esc(q.id)}" aria-label="Aus Favoriten entfernen">${icon.heart}</button>
+            </div>`).join('') : '<p class="muted">Tipp beim Tagesimpuls auf das Herz, dann landet er hier.</p>'}
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Kurze Pausen</h2></div></div>
+        <div class="card-body">${pauseStats()}</div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div class="card-title"><h2>Daten</h2></div></div>
+        <div class="card-body">
+          <p class="muted small" style="margin-bottom:12px">Alles liegt nur auf diesem Gerät. Mach ab und zu ein Backup, zum Beispiel bevor du das Handy wechselst.</p>
+          <div class="btn-col">
+            <button class="btn secondary block" data-action="export">Backup herunterladen</button>
+            <button class="btn secondary block" data-action="import">Backup einspielen</button>
+            <input type="file" accept="application/json,.json" data-import hidden>
+            <button class="btn ghost block danger-text" data-action="wipe">Alle Daten löschen</button>
+          </div>
+        </div>
+      </section>
+
+      <p class="muted small" style="text-align:center;margin:6px 0 10px">Habit · Version 1.0</p>
+    </div>`;
 }
 
 // ---------- Router & Rendern ----------
@@ -543,6 +851,56 @@ const actions = {
   pause() {
     openPause();
   },
+
+  // Einstellungen
+  visible(el) {
+    const id = el.dataset.id;
+    state.settings.visible[id] = !visible(id);
+    persist(true);
+    rerender({});
+  },
+  'mini-type'(el) {
+    state.settings.miniGoal.type = el.dataset.id;
+    persist(true);
+    rerender({});
+  },
+  'mini-prayer'(el) {
+    state.settings.miniGoal.prayer = el.dataset.id;
+    persist(true);
+    rerender({});
+  },
+  'gym-day'(el) {
+    const i = Number(el.dataset.id);
+    state.settings.gymDays[i] = !state.settings.gymDays[i];
+    persist(true);
+    rerender({});
+  },
+  theme(el) {
+    state.settings.theme = el.dataset.id;
+    persist(true);
+    applyTheme();
+    rerender({});
+  },
+  'impulse-photo'() {
+    state.settings.impulsePhoto = !state.settings.impulsePhoto;
+    persist(true);
+    rerender({});
+  },
+  'fav-remove'(el) {
+    state.favorites = state.favorites.filter((id) => id !== el.dataset.id);
+    persist(true);
+    rerender({});
+    toast('Aus den Favoriten entfernt');
+  },
+  export() {
+    exportData();
+  },
+  import() {
+    document.querySelector('[data-import]')?.click();
+  },
+  wipe() {
+    confirmWipe();
+  },
 };
 
 document.addEventListener('click', (e) => {
@@ -557,6 +915,23 @@ document.addEventListener('click', (e) => {
 
 // Texteingaben speichern ohne Neu-Rendern, damit der Fokus bleibt
 document.addEventListener('input', (e) => {
+  const set = e.target.closest('[data-setting]');
+  if (set) {
+    const v = set.value;
+    switch (set.dataset.setting) {
+      case 'why': state.settings.why = v; break;
+      case 'mini-label': {
+        state.settings.miniGoal.label = v;
+        const out = set.closest('.card-body').querySelector('b');
+        if (out) out.textContent = miniLabel();
+        break;
+      }
+      case 'clear-name': state.settings.clearName = v.trim() || 'Klar-Tage'; break;
+      default: return;
+    }
+    persist();
+    return;
+  }
   const el = e.target.closest('[data-input]');
   if (!el) return;
   const day = ensureDay(state, todayKey());
@@ -573,6 +948,12 @@ document.addEventListener('input', (e) => {
     default: return;
   }
   persist();
+});
+
+document.addEventListener('change', (e) => {
+  if (e.target.matches('[data-import]') && e.target.files?.[0]) importData(e.target.files[0], e.target);
+  // Namensfeld erst beim Verlassen übernehmen, damit die Liste nicht beim Tippen springt
+  if (e.target.matches('[data-setting="clear-name"]')) rerender({});
 });
 
 window.addEventListener('pagehide', () => persist(true));
@@ -763,6 +1144,87 @@ function openPause() {
         break;
       }
     }
+  });
+}
+
+// ---------- Backup ----------
+
+function exportData() {
+  persist(true);
+  const json = JSON.stringify({ app: 'habit', exportedAt: new Date().toISOString(), ...state }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `habit-backup-${todayKey()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast('Backup gespeichert');
+}
+
+function importData(file, input) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    input.value = '';
+    let data;
+    try {
+      data = JSON.parse(String(reader.result));
+    } catch {
+      toast('Die Datei konnte nicht gelesen werden.');
+      return;
+    }
+    if (!data || typeof data !== 'object' || !data.settings || !data.days) {
+      toast('Das sieht nicht nach einem Habit-Backup aus.');
+      return;
+    }
+    const n = Object.keys(data.days).length;
+    const s = openSheet(`
+      <h2>Backup einspielen?</h2>
+      <p class="lead">Das Backup hat ${n === 1 ? 'einen Tag' : `${n} Tage`}. Es ersetzt alles, was gerade in der App ist.</p>
+      <div class="sheet-actions">
+        <button class="btn block" data-sheet="ok">Einspielen</button>
+        <button class="btn ghost block" data-sheet="cancel">Abbrechen</button>
+      </div>`);
+    s.el.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-sheet]');
+      if (!b) return;
+      if (b.dataset.sheet === 'ok') {
+        const { app, exportedAt, ...rest } = data;
+        state = normalize({ ...rest, settings: { ...rest.settings, onboarded: true } });
+        persist(true);
+        applyTheme();
+        toast('Backup eingespielt');
+      }
+      s.close();
+      render();
+    });
+  };
+  reader.onerror = () => toast('Die Datei konnte nicht gelesen werden.');
+  reader.readAsText(file);
+}
+
+function confirmWipe() {
+  const s = openSheet(`
+    <h2>Alles löschen?</h2>
+    <p class="lead">Alle Tage, Einstellungen, Favoriten und Pausen werden von diesem Gerät gelöscht. Das lässt sich nicht rückgängig machen. Wenn du unsicher bist, lad vorher ein Backup herunter.</p>
+    <div class="sheet-actions">
+      <button class="btn danger block" data-sheet="ok">Ja, alles löschen</button>
+      <button class="btn ghost block" data-sheet="cancel">Abbrechen</button>
+    </div>`);
+  s.el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sheet]');
+    if (!b) return;
+    s.close();
+    if (b.dataset.sheet !== 'ok') return;
+    clearAll();
+    state = defaultState();
+    applyTheme();
+    location.hash = '#/heute';
+    render();
+    window.scrollTo(0, 0);
+    onboarding();
   });
 }
 
