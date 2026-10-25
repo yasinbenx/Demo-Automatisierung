@@ -150,10 +150,10 @@ function checkBtn(on, attrs = '', label = '') {
 
 function greeting() {
   const h = new Date().getHours();
-  if (h >= 4 && h < 11) return { word: 'Morgen', pre: 'Guten', sub: 'Ein neuer Tag. Du musst nichts aufholen, nur anfangen.' };
-  if (h >= 11 && h < 17) return { word: 'Tag', pre: 'Schönen', sub: 'Schritt für Schritt. Alles, was du heute tust, zählt.' };
-  if (h >= 17 && h < 22) return { word: 'Abend', pre: 'Guten', sub: 'Der Tag wird ruhiger. Schau freundlich auf das, was war.' };
-  return { word: 'Nacht', pre: 'Ruhige', sub: 'Ruh dich aus. Morgen ist ein neuer Anfang.' };
+  if (h >= 4 && h < 11) return { title: 'Guten Morgen.', sub: 'Womit fängst du heute an?' };
+  if (h >= 11 && h < 17) return { title: 'Hallo.', sub: 'Was steht heute noch an?' };
+  if (h >= 17 && h < 22) return { title: 'Guten Abend.', sub: 'Wie war dein Tag?' };
+  return { title: 'Gute Nacht.', sub: 'Zeit zum Schlafen. Morgen geht es weiter.' };
 }
 
 function heroDate() {
@@ -164,7 +164,6 @@ function heroDate() {
 function hero(title, sub) {
   return `
     <header class="hero">
-      <div class="zellige"></div>
       <div class="hero-top">
         <div class="brand"><img src="icons/logo.svg" alt="">Habit</div>
         <div class="hero-date">${heroDate()}</div>
@@ -189,7 +188,6 @@ function impulseCard(q, { compact = false } = {}) {
   const img = IMPULSE_IMAGES[n % IMPULSE_IMAGES.length];
   return `
     <article class="card impulse ${photo ? '' : 'plain'}" ${photo ? `style="background-image:url('${img}')"` : ''}>
-      <div class="zellige"></div>
       <div class="impulse-inner">
         <div class="impulse-top">
           <span class="chip">${esc(q.cat)} · ${esc(q.type)}</span>
@@ -223,7 +221,7 @@ function prayersCard(day) {
             </button>`).join('')}
         </div>
       </div>
-      <div class="card-foot"><span>Alle fünf: ${w} von 7 Tagen diese Woche</span></div>
+      <div class="card-foot"><span>Alle fünf Gebete: ${w} von 7 Tagen</span></div>
     </section>`;
 }
 
@@ -237,19 +235,19 @@ function gymCard(day) {
       <button class="check-row" data-action="gym" aria-pressed="${day.gym.done}">
         ${checkBtn(day.gym.done, 'data-check="gym"')}
         <span class="label"><strong>${day.gym.done ? 'Training erledigt' : 'Training heute'}</strong>
-        <span>${gymDay ? `${WEEKDAYS[weekdayIndex(today)]} ist Gym-Tag` : 'Extra-Einheit am Ruhetag'}</span></span>
+        <span>${gymDay ? `${WEEKDAYS[weekdayIndex(today)]} ist Gym-Tag` : 'Eigentlich Ruhetag'}</span></span>
       </button>
       <div class="reveal ${day.gym.done ? 'open' : ''}"><div>
-        <input class="field" data-input="gym-note" value="${esc(day.gym.note)}" placeholder="Notiz, z. B. Brust & Trizeps" maxlength="80" autocomplete="off">
+        <input class="field" data-input="gym-note" value="${esc(day.gym.note)}" placeholder="Was hast du trainiert? z. B. Brust & Trizeps" maxlength="80" autocomplete="off">
       </div></div>`;
   } else {
     body = `
       <div class="rest">
         <span class="rest-badge">${icon.leaf(22)}</span>
-        <span class="label" style="flex:1"><strong style="display:block;font-weight:500">Ruhetag</strong>
-        <span class="muted small">Erholung gehört dazu. Heute zählt nichts als verpasst.</span></span>
+        <span class="label" style="flex:1"><strong style="display:block;font-weight:500">Ruhetag.</strong>
+        <span class="muted small">Heute fehlt dir nichts.</span></span>
       </div>
-      <div style="text-align:right;margin-top:4px"><button class="link-btn" data-action="gym">Trotzdem trainiert?</button></div>`;
+      <div style="text-align:right;margin-top:4px"><button class="link-btn" data-action="gym">Doch trainiert?</button></div>`;
   }
   return `
     <section class="card" aria-labelledby="h-gym">
@@ -258,7 +256,7 @@ function gymCard(day) {
         <div class="card-meta">${gymDay ? 'Gym-Tag' : 'Ruhetag'}</div>
       </div>
       <div class="card-body">${body}</div>
-      <div class="card-foot"><span>${done} von ${planned} Gym-Tagen diese Woche</span></div>
+      <div class="card-foot"><span>Gym diese Woche: ${done} von ${planned}</span></div>
     </section>`;
 }
 
@@ -269,26 +267,26 @@ function clearCard(day, flash) {
     <section class="card" aria-labelledby="h-clear">
       <div class="card-head">
         <div class="card-title"><span class="card-icon">${icon.clear(18)}</span><h2 id="h-clear">${esc(state.settings.clearName)}</h2></div>
-        <div class="card-meta">${series > 1 ? `Serie ${series}` : ''}</div>
+        <div class="card-meta">${series > 1 ? `${series} am Stück` : ''}</div>
       </div>
       <div class="card-body">
         <div class="clear-wrap">
-          <div class="clear-count">${month}<small>${month === 1 ? 'Tag' : 'Tage'} im ${monthName}</small></div>
+          <div class="clear-count"><span class="num">${month}</span><small>${month === 1 ? 'Tag' : 'Tage'} im ${monthName}</small></div>
           <div class="clear-actions">
             <button class="check-row" style="width:auto" data-action="clear" aria-pressed="${day.clear === true}">
-              <span class="label" style="text-align:right"><strong>Heute</strong><span>${day.clear === true ? 'erledigt' : 'abhaken'}</span></span>
+              <span class="label" style="text-align:right"><strong>Heute</strong><span>${day.clear === true ? 'geschafft' : 'antippen'}</span></span>
               ${checkBtn(day.clear === true, 'data-check="clear"')}
             </button>
           </div>
         </div>
         ${slip ? `
           <div class="note">
-            <strong>Das ist kein Neustart bei null.</strong> Mach morgen einfach weiter. Deine ${month} ${month === 1 ? 'Tag' : 'Tage'} im ${monthName} bleiben deine.
+            <strong>Das ist kein Neustart bei null.</strong> Mach morgen einfach weiter. Deine ${month} ${month === 1 ? 'Tag' : 'Tage'} im ${monthName} bleiben.
             ${flash && state.settings.why?.trim() ? `<p class="why-text">„${esc(state.settings.why.trim())}“</p>` : ''}
           </div>` : ''}
       </div>
       <div class="card-foot">
-        <span>${slip ? 'Heute notiert. Morgen geht es weiter.' : 'Jeder Tag zählt für sich.'}</span>
+        <span>${slip ? 'Ist notiert. Morgen geht es weiter.' : 'Tag für Tag.'}</span>
         ${slip ? '' : '<button class="link-btn" style="padding:0" data-action="slip">Ausrutscher</button>'}
       </div>
     </section>`;
@@ -304,18 +302,18 @@ function moneyCard(day) {
       <div class="card-body">
         <button class="check-row" data-action="money" aria-pressed="${day.money.checked}">
           ${checkBtn(day.money.checked, 'data-check="money"')}
-          <span class="label"><strong>Konten angeschaut</strong><span>Kurz reinschauen reicht.</span></span>
+          <span class="label"><strong>Konten angeschaut</strong><span>Ein Blick reicht.</span></span>
         </button>
         <div class="field-row" style="margin-top:12px">
           <label class="field-euro"><span class="sr-only">Heute ausgegeben</span>
             <input class="field" data-input="money-amount" inputmode="decimal" value="${esc(day.money.amount)}" placeholder="0,00" autocomplete="off">
           </label>
           <label style="flex:1"><span class="sr-only">Notiz</span>
-            <input class="field" data-input="money-note" value="${esc(day.money.note)}" placeholder="Wofür? (optional)" maxlength="80" autocomplete="off">
+            <input class="field" data-input="money-note" value="${esc(day.money.note)}" placeholder="Wofür?" maxlength="80" autocomplete="off">
           </label>
         </div>
       </div>
-      <div class="card-foot"><span>Diese Woche ausgegeben</span><strong data-out="money-week" style="color:var(--ink)">${euro(moneyWeekSum())}</strong></div>
+      <div class="card-foot"><span>Diese Woche ausgegeben</span><strong class="num" data-out="money-week" style="color:var(--ink);font-size:17px">${euro(moneyWeekSum())}</strong></div>
     </section>`;
 }
 
@@ -325,10 +323,10 @@ function reflectionCard(day) {
     <section class="card" aria-labelledby="h-refl">
       <div class="card-head">
         <div class="card-title"><span class="card-icon">${icon.pen(18)}</span><h2 id="h-refl">Tagesreflexion</h2></div>
-        <div class="card-meta">${evening ? 'Jetzt am Abend' : 'Für den Abend'}</div>
+        <div class="card-meta">${evening ? 'Jetzt' : 'Am Abend'}</div>
       </div>
       <div class="card-body">
-        <p class="muted small" style="margin-bottom:10px">Wie war dein Tag?</p>
+        <p class="muted small" style="margin-bottom:10px">Wie geht’s dir heute?</p>
         <div class="moods ${day.mood ? 'has' : ''}" role="radiogroup" aria-label="Stimmung">
           ${MOODS.map((m) => `<button class="mood ${day.mood === m.v ? 'on' : ''}" role="radio" aria-checked="${day.mood === m.v}" aria-label="${m.l}" data-action="mood" data-v="${m.v}">${m.e}</button>`).join('')}
         </div>
@@ -357,37 +355,36 @@ function miniGoalCard(day) {
     inner = `
       <button class="check-row" data-action="${action}" aria-pressed="${done}">
         ${checkBtn(done, `data-check="${action}"`)}
-        <span class="label"><strong>${esc(miniLabel())}</strong><span>${done ? 'Geschafft.' : 'Nur das. Mehr nicht.'}</span></span>
+        <span class="label"><strong>${esc(miniLabel())}</strong><span>${done ? 'Geschafft.' : 'Nur das, sonst nichts.'}</span></span>
       </button>`;
   }
   return `
     <section class="card">
       <div class="card-head">
-        <div class="card-title"><span class="card-icon">${icon.sparkle(18)}</span><h2>Mini-Ziel</h2></div>
+        <div class="card-title"><span class="card-icon">${icon.target(18)}</span><h2>Mini-Ziel</h2></div>
         <div class="card-meta">${done ? '<b>Tag geschafft</b>' : esc(miniLabel())}</div>
       </div>
       <div class="card-body">${inner}</div>
-      <div class="card-foot"><span>${done ? 'Das zählt heute als ganzer Tag. Gut gemacht.' : 'Sobald das erledigt ist, zählt der Tag als geschafft.'}</span></div>
+      <div class="card-foot"><span>${done ? 'Der Tag zählt als geschafft.' : 'Wenn das erledigt ist, zählt der Tag.'}</span></div>
     </section>`;
 }
 
 function hardView(day) {
   const q = quoteOfDay(new Date(), ['Vergebung', 'Geduld']);
   return `
-    ${hero('Heute <em>sanft</em>.', 'Manche Tage sind schwer. Das ist in Ordnung. Heute reicht eine einzige Sache.')}
+    ${hero('Heute nur eins.', 'Schwere Tage gibt es. Heute reicht eine Sache.')}
     <div class="stack">
       <div class="hard-banner">
-        <div class="zellige"></div>
-        <h2>Du bist nicht zurück am Anfang.</h2>
-        <p class="muted">Alles andere ist für heute ausgeblendet. Kein Druck, keine Liste.</p>
+        <h2>Du fängst nicht bei null an.</h2>
+        <p class="muted">Alles andere ist heute ausgeblendet.</p>
         ${whyBlock()}
       </div>
       ${miniGoalCard(day)}
       ${impulseCard(q, { compact: true })}
       <button class="quick-btn pause" data-action="pause" style="width:100%">
-        <span class="ic">${icon.pause(20)}</span><span>Kurze Pause<small>10 Minuten durchatmen</small></span>
+        <span class="ic">${icon.pause(20)}</span><span>Kurze Pause<small>10 Minuten</small></span>
       </button>
-      <button class="btn ghost block" data-action="hard-off">Zur normalen Ansicht</button>
+      <button class="btn ghost block" data-action="hard-off">Alles wieder anzeigen</button>
     </div>`;
 }
 
@@ -402,7 +399,7 @@ function todayView(flash = {}) {
   const doneCount = ['prayers', 'gym', 'clear', 'money', 'reflection']
     .filter((id) => visible(id))
     .filter((id) => habitStatus(id, new Date(), day) === 'done').length;
-  const sub = doneCount === 0 ? g.sub : doneCount === 1 ? 'Eine Sache ist heute schon erledigt. Schön.' : `Heute schon ${doneCount} Dinge erledigt. Schön, dass du dranbleibst.`;
+  const sub = doneCount === 0 ? g.sub : doneCount === 1 ? 'Eine Sache ist heute schon geschafft.' : `${doneCount} Dinge sind heute schon geschafft.`;
 
   const cards = [];
   if (visible('impulse')) cards.push(impulseCard(quoteOfDay()));
@@ -413,13 +410,13 @@ function todayView(flash = {}) {
   if (visible('reflection')) cards.push(reflectionCard(day));
 
   return `
-    ${hero(`${g.pre} <em>${g.word}</em>`, sub)}
+    ${hero(g.title, sub)}
     <div class="stack">
       <div class="quick">
-        <button class="quick-btn" data-action="hard-on"><span class="ic">${icon.feather(19)}</span><span>Heute ist schwer<small>Nur ein Mini-Ziel</small></span></button>
+        <button class="quick-btn" data-action="hard-on"><span class="ic">${icon.feather(19)}</span><span>Heute ist schwer<small>Nur eins schaffen</small></span></button>
         <button class="quick-btn pause" data-action="pause"><span class="ic">${icon.pause(20)}</span><span>Kurze Pause<small>10 Minuten</small></span></button>
       </div>
-      ${cards.length ? cards.join('') : `<div class="empty"><div class="zellige"></div><p>Alle Gewohnheiten sind ausgeblendet.<br>In den Einstellungen kannst du sie wieder einschalten.</p></div>`}
+      ${cards.length ? cards.join('') : `<div class="empty"><p>Gerade ist alles ausgeblendet.<br>In den Einstellungen kannst du es wieder einschalten.</p></div>`}
     </div>`;
 }
 
@@ -427,14 +424,14 @@ function todayView(flash = {}) {
 
 function weekView() {
   return `
-    ${hero('Deine <em>Woche</em>', 'Die letzten sieben Tage auf einen Blick.')}
-    <div class="stack"><div class="empty"><div class="zellige"></div><p>Die Wochenübersicht folgt im nächsten Schritt.</p></div></div>`;
+    ${hero('Deine Woche', 'Die letzten 7 Tage.')}
+    <div class="stack"><div class="empty"><p>Die Wochenübersicht kommt im nächsten Schritt.</p></div></div>`;
 }
 
 function settingsView() {
   return `
-    ${hero('<em>Einstellungen</em>', '')}
-    <div class="stack"><div class="empty"><div class="zellige"></div><p>Die Einstellungen folgen im nächsten Schritt.</p></div></div>`;
+    ${hero('Einstellungen', '')}
+    <div class="stack"><div class="empty"><p>Die Einstellungen kommen im nächsten Schritt.</p></div></div>`;
 }
 
 // ---------- Router & Rendern ----------
@@ -533,7 +530,7 @@ const actions = {
     else state.favorites.push(id);
     persist(true);
     rerender({ pop: i >= 0 ? null : id });
-    toast(i >= 0 ? 'Aus den Favoriten entfernt' : 'In deinen Favoriten gespeichert');
+    toast(i >= 0 ? 'Aus den Favoriten entfernt' : 'Als Favorit gespeichert');
   },
   'hard-on'() {
     ensureDay(state, todayKey()).hard = true;
@@ -615,10 +612,10 @@ function onboarding() {
   const s = openSheet(`
     <div style="text-align:center;margin-bottom:6px"><img src="icons/logo.svg" alt="" width="64" height="64" style="border-radius:18px;box-shadow:var(--shadow)"></div>
     <h2 style="text-align:center">Schön, dass du da bist.</h2>
-    <p class="lead" style="text-align:center">Hier gibt es keine Streaks und keinen Druck. Ein verpasster Tag setzt nichts zurück.</p>
+    <p class="lead" style="text-align:center">Hier gibt es keine Streaks. Wenn du mal einen Tag verpasst, geht nichts verloren.</p>
     <label for="why-input" style="display:block;font-weight:500;margin-bottom:8px">Warum willst du wieder anfangen?</label>
-    <textarea id="why-input" class="field" rows="4" placeholder="In deinen eigenen Worten …" maxlength="500"></textarea>
-    <p class="muted small" style="margin-top:8px">Diesen Satz zeigt dir die App an schweren Tagen. Du kannst ihn jederzeit in den Einstellungen ändern.</p>
+    <textarea id="why-input" class="field" rows="4" placeholder="In deinen Worten" maxlength="500"></textarea>
+    <p class="muted small" style="margin-top:8px">Das zeigt dir die App an schweren Tagen. Ändern kannst du es später in den Einstellungen.</p>
     <div class="sheet-actions">
       <button class="btn block" data-sheet="save">Speichern</button>
       <button class="btn ghost block" data-sheet="skip">Überspringen</button>
@@ -637,10 +634,10 @@ function onboarding() {
 // ---------- Kurze Pause ----------
 
 const PAUSE_TASKS = [
-  { t: 'Trink ein großes Glas Wasser', d: 'Langsam, Schluck für Schluck.' },
-  { t: '20 Liegestütze', d: 'Oder so viele, wie gerade gehen.' },
-  { t: 'Geh kurz raus', d: 'Frische Luft, ein paar Schritte, den Himmel anschauen.' },
-  { t: 'Mach Wudu', d: 'Kühles Wasser, ruhige Bewegungen.' },
+  { t: 'Trink ein großes Glas Wasser', d: 'Ganz in Ruhe.' },
+  { t: '20 Liegestütze', d: 'Oder so viele, wie gehen.' },
+  { t: 'Geh kurz raus', d: 'Einmal um den Block reicht.' },
+  { t: 'Mach Wudu', d: 'Mit kaltem Wasser.' },
 ];
 const PAUSE_SECONDS = 10 * 60;
 let pauseTimer = null;
@@ -667,17 +664,16 @@ function openPause() {
         </div>
         <button class="pause-swap" data-p="swap" aria-label="Andere Aufgabe">${icon.refresh(18)}</button>
       </div>
-      <button class="btn secondary block" data-p="done" style="margin-top:14px">Mir geht es besser</button>
+      <button class="btn secondary block" data-p="done" style="margin-top:14px">Mir geht’s besser</button>
     </div>`;
 
   const duaHtml = () => {
     const dua = PAUSE_DUAS[Math.floor(Math.random() * PAUSE_DUAS.length)];
     return `
       <h2>Gut gemacht.</h2>
-      <p class="lead">Du hast dir einen Moment genommen. Das war stark.</p>
+      <p class="lead">Du hast dir die Pause genommen.</p>
       ${whyBlock()}
       <div class="card impulse plain" style="min-height:0;margin-top:16px">
-        <div class="zellige"></div>
         <div class="impulse-inner">
           <p class="ar" style="font-size:22px">${dua.ar}</p>
           <p class="impulse-text" style="font-size:18px">${esc(dua.text)}</p>
@@ -697,13 +693,13 @@ function openPause() {
 
   const reflectHtml = () => `
     <h2>Kurz festhalten</h2>
-    <p class="lead">Alles freiwillig. Es hilft, Muster zu erkennen, nicht dich zu bewerten.</p>
+    <p class="lead">Alles freiwillig. So siehst du später, wann es schwer wird.</p>
     <label class="form-label">Wo warst du?</label>
     <div class="chips" data-group="place">${PLACES.map((p) => `<button class="chip-btn" data-v="${p}">${p}</button>`).join('')}</div>
-    <input class="field" data-f="place" placeholder="Oder eigene Angabe" maxlength="40" style="margin-top:8px">
+    <input class="field" data-f="place" placeholder="Oder selbst eintippen" maxlength="40" style="margin-top:8px">
     <label class="form-label">Wie hast du dich gefühlt?</label>
     <div class="chips" data-group="feeling">${FEELINGS.map((p) => `<button class="chip-btn" data-v="${p}">${p}</button>`).join('')}</div>
-    <input class="field" data-f="feeling" placeholder="Oder eigene Worte" maxlength="40" style="margin-top:8px">
+    <input class="field" data-f="feeling" placeholder="Oder selbst eintippen" maxlength="40" style="margin-top:8px">
     <label class="form-label" for="p-time">Wie spät war es?</label>
     <input class="field" id="p-time" type="time" data-f="time" value="${hh}:${mm}">
     <div class="sheet-actions">
@@ -767,7 +763,7 @@ function openPause() {
         state.pauses.push({ ts: startedAt.toISOString(), task: PAUSE_TASKS[taskIdx].t, place, feeling, time });
         persist(true);
         s.close();
-        toast('Gespeichert. Danke, dass du hingeschaut hast.');
+        toast('Gespeichert.');
         break;
       }
     }

@@ -45,13 +45,13 @@ export const QUOTES = [
   },
   {
     id: 's-weitermachen', type: 'Gedanke', cat: 'Neuanfang',
-    text: 'Du fängst nicht von vorne an. Du machst einfach weiter, mit allem, was du schon gelernt hast.',
-    source: 'Gedanke für heute',
+    text: 'Du fängst nicht von vorne an. Du machst da weiter, wo du warst.',
+    source: 'Gedanke',
   },
   {
     id: 's-kleiner-schritt', type: 'Gedanke', cat: 'Neuanfang',
-    text: 'Ein kleiner Schritt heute zählt mehr als ein perfekter Plan für morgen.',
-    source: 'Gedanke für heute',
+    text: 'Eine kleine Sache heute bringt mehr als ein großer Plan für morgen.',
+    source: 'Gedanke',
   },
 
   // ---------- Geduld ----------
@@ -94,8 +94,8 @@ export const QUOTES = [
   },
   {
     id: 's-rhythmus', type: 'Gedanke', cat: 'Geduld',
-    text: 'Rhythmus entsteht durch Wiederkehr, nicht durch Perfektion.',
-    source: 'Gedanke für heute',
+    text: 'Es muss nicht perfekt sein. Es muss nur öfter passieren.',
+    source: 'Gedanke',
   },
 
   // ---------- Vergebung ----------
@@ -198,8 +198,8 @@ export const QUOTES = [
   },
   {
     id: 's-langsam', type: 'Gedanke', cat: 'Kraft',
-    text: 'Auch ein langsamer Tag ist ein Tag in die richtige Richtung.',
-    source: 'Gedanke für heute',
+    text: 'Langsame Tage zählen auch.',
+    source: 'Gedanke',
   },
 ];
 

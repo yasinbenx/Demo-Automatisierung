@@ -21,9 +21,6 @@
   --line: rgba(43, 33, 24, 0.1);
   --on-green: #F3E8D6;
   --on-green-2: rgba(243, 232, 214, 0.72);
-  --pattern: rgba(243, 232, 214, 0.1);
-  --hero-pattern: rgba(243, 232, 214, 0.13);
-  --pattern-empty: rgba(47, 74, 59, 0.07);
   --tabbar: rgba(251, 246, 236, 0.86);
   --overlay: rgba(28, 22, 16, 0.45);
 
@@ -32,8 +29,9 @@
   --shadow-lg: 0 10px 40px rgba(40, 24, 10, 0.2);
 
   /* Typografie */
-  --font-serif: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-brand: 'Reem Kufi', 'Bricolage Grotesque', sans-serif;
   --font-ar: 'Amiri', 'Noto Naskh Arabic', 'Geeza Pro', serif;
 
   /* Form */
@@ -68,9 +66,6 @@
     --line: rgba(240, 229, 210, 0.09);
     --on-green: #F0E5D2;
     --on-green-2: rgba(240, 229, 210, 0.68);
-    --pattern: rgba(240, 229, 210, 0.07);
-    --hero-pattern: rgba(240, 229, 210, 0.07);
-    --pattern-empty: rgba(240, 229, 210, 0.04);
     --tabbar: rgba(24, 32, 26, 0.86);
     --overlay: rgba(0, 0, 0, 0.6);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -97,9 +92,6 @@
   --line: rgba(240, 229, 210, 0.09);
   --on-green: #F0E5D2;
   --on-green-2: rgba(240, 229, 210, 0.68);
-  --pattern: rgba(240, 229, 210, 0.07);
-  --hero-pattern: rgba(240, 229, 210, 0.07);
-  --pattern-empty: rgba(240, 229, 210, 0.04);
   --tabbar: rgba(24, 32, 26, 0.86);
   --overlay: rgba(0, 0, 0, 0.6);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -132,10 +124,9 @@ body {
 }
 
 h1, h2, h3 {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  font-variation-settings: 'SOFT' 50, 'WONK' 0;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.012em;
   margin: 0;
   line-height: 1.15;
 }
@@ -172,23 +163,6 @@ button {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
-}
-
-/* ---------- Zellige-Muster ----------
-   Die Kachel ist eine Maske, die Farbe kommt aus background-color.
-   So passt sie sich Hell/Dunkel automatisch an. */
-
-.zellige {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-color: var(--pattern);
-  -webkit-mask-image: url("../images/zellige.svg");
-  mask-image: url("../images/zellige.svg");
-  -webkit-mask-size: 72px 72px;
-  mask-size: 72px 72px;
-  -webkit-mask-position: center top;
-  mask-position: center top;
 }
 
 /* ---------- App-Rahmen ---------- */
@@ -228,8 +202,11 @@ button {
   margin-bottom: 18px;
 }
 
-.hero .zellige {
-  background-color: var(--hero-pattern);
+.hero {
+  /* Rundbögen als feines Muster, nur im Header */
+  background-image: url("../images/arches.svg");
+  background-size: 48px 64px;
+  background-position: center top;
 }
 
 .hero::after {
@@ -237,12 +214,10 @@ button {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent 0%, transparent 25%, var(--green) 92%);
+  background: linear-gradient(to bottom, transparent 0%, transparent 30%, var(--green) 95%);
 }
 
-.hero > *:not(.zellige) { z-index: 1; }
-
-.hero > *:not(.zellige) { position: relative; }
+.hero > * { position: relative; z-index: 1; }
 
 .hero-top {
   display: flex;
@@ -255,8 +230,9 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--font-serif);
-  font-size: 17px;
+  font-family: var(--font-brand);
+  font-weight: 600;
+  font-size: 18px;
   color: var(--on-green-2);
 }
 
@@ -274,14 +250,11 @@ button {
 }
 
 .hero h1 {
-  font-size: 34px;
-  font-weight: 400;
-  font-variation-settings: 'SOFT' 100, 'opsz' 96;
-}
-
-.hero h1 em {
-  font-style: italic;
-  color: #E8A27C;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.018em;
+  line-height: 1.1;
+  font-variation-settings: 'opsz' 48;
 }
 
 .hero-sub {
@@ -653,10 +626,13 @@ textarea.field {
 }
 
 .clear-count {
-  font-family: var(--font-serif);
-  font-size: 44px;
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   line-height: 1;
-  font-variation-settings: 'opsz' 144;
+  font-variant-numeric: tabular-nums;
+  font-variation-settings: 'opsz' 96;
   color: var(--ink);
 }
 
@@ -664,6 +640,8 @@ textarea.field {
   display: block;
   margin-top: 4px;
   font-family: var(--font-sans);
+  font-weight: 400;
+  letter-spacing: 0;
   font-size: 13px;
   color: var(--ink-2);
 }
@@ -696,8 +674,7 @@ textarea.field {
 
 .note .why-text {
   margin-top: 8px;
-  font-family: var(--font-serif);
-  font-style: italic;
+  font-weight: 500;
 }
 
 /* ---------- Stimmung ---------- */
@@ -761,8 +738,6 @@ textarea.field {
 
 .impulse.plain::before { display: none; }
 
-.impulse.plain .zellige { display: block; }
-.impulse .zellige { display: none; }
 
 .impulse-inner { padding: 18px 20px 18px; position: relative; }
 
@@ -788,11 +763,10 @@ textarea.field {
 }
 
 .impulse-text {
-  font-family: var(--font-serif);
-  font-size: 20px;
-  line-height: 1.38;
-  font-weight: 400;
-  font-variation-settings: 'opsz' 36, 'SOFT' 100;
+  font-size: 19px;
+  line-height: 1.42;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   text-wrap: pretty;
 }
 
@@ -887,8 +861,6 @@ textarea.field {
   box-shadow: var(--shadow);
 }
 
-.hard-banner .zellige { background-color: var(--pattern-empty); }
-.hard-banner > * { position: relative; }
 
 .hard-banner h2 {
   font-size: 22px;
@@ -910,9 +882,8 @@ textarea.field {
 }
 
 .why-card p {
-  font-family: var(--font-serif);
-  font-style: italic;
   font-size: 17px;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -928,8 +899,6 @@ textarea.field {
   border: 1.5px dashed var(--line);
 }
 
-.empty .zellige { background-color: var(--pattern-empty); }
-.empty > * { position: relative; }
 
 .section-label {
   font-size: 12px;
@@ -1148,11 +1117,12 @@ textarea.field {
 }
 
 .pause-time {
-  font-family: var(--font-serif);
-  font-size: 52px;
-  font-weight: 300;
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  font-variation-settings: 'opsz' 144;
+  font-variation-settings: 'opsz' 96;
   line-height: 1.1;
 }
 
@@ -1205,4 +1175,12 @@ textarea.field {
   background: var(--terra);
   color: #FFF7EE;
   box-shadow: none;
+}
+
+/* Große Zahlen: Bricolage mit tabellarischen Ziffern */
+.num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
