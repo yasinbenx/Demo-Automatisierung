@@ -20,11 +20,11 @@ const $view = document.getElementById('view');
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const WEEKDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 const MOODS = [
-  { v: 1, e: '😔', l: 'schwer' },
-  { v: 2, e: '😕', l: 'eher schwer' },
-  { v: 3, e: '😐', l: 'okay' },
-  { v: 4, e: '🙂', l: 'gut' },
-  { v: 5, e: '😊', l: 'sehr gut' },
+  { v: 1, l: 'schwer' },
+  { v: 2, l: 'eher schwer' },
+  { v: 3, l: 'okay' },
+  { v: 4, l: 'eher gut' },
+  { v: 5, l: 'gut' },
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -49,9 +49,13 @@ function isGymDay(date) {
   return !!state.settings.gymDays[weekdayIndex(date)];
 }
 
+function miniPrayer() {
+  return PRAYERS.find((p) => p.id === state.settings.miniGoal.prayer) || PRAYERS[4];
+}
+
 function miniLabel() {
   const m = state.settings.miniGoal;
-  if (m.type === 'prayer') return 'Ein Gebet';
+  if (m.type === 'prayer') return `${miniPrayer().name} beten`;
   if (m.type === 'clear') return `Ein ${state.settings.clearName === 'Klar-Tage' ? 'klarer Tag' : state.settings.clearName}`;
   if (m.type === 'money') return 'Kurz die Konten anschauen';
   if (m.type === 'gym') return 'Kurz bewegen';
@@ -60,7 +64,7 @@ function miniLabel() {
 
 function miniDone(day) {
   const m = state.settings.miniGoal;
-  if (m.type === 'prayer') return prayerCount(day) > 0;
+  if (m.type === 'prayer') return !!day.prayers[miniPrayer().id];
   if (m.type === 'clear') return day.clear === true;
   if (m.type === 'money') return day.money.checked;
   if (m.type === 'gym') return day.gym.done;
@@ -328,8 +332,9 @@ function reflectionCard(day) {
       <div class="card-body">
         <p class="muted small" style="margin-bottom:10px">Wie geht’s dir heute?</p>
         <div class="moods ${day.mood ? 'has' : ''}" role="radiogroup" aria-label="Stimmung">
-          ${MOODS.map((m) => `<button class="mood ${day.mood === m.v ? 'on' : ''}" role="radio" aria-checked="${day.mood === m.v}" aria-label="${m.l}" data-action="mood" data-v="${m.v}">${m.e}</button>`).join('')}
+          ${MOODS.map((m) => `<button class="mood ${day.mood === m.v ? 'on' : ''}" role="radio" aria-checked="${day.mood === m.v}" aria-label="${m.v}, ${m.l}" data-action="mood" data-v="${m.v}">${m.v}</button>`).join('')}
         </div>
+        <div class="mood-scale" aria-hidden="true"><span>schwer</span><span>gut</span></div>
         <textarea class="field" data-input="good" rows="2" placeholder="Was war heute gut?" maxlength="280">${esc(day.good)}</textarea>
       </div>
     </section>`;
@@ -340,29 +345,20 @@ function reflectionCard(day) {
 function miniGoalCard(day) {
   const m = state.settings.miniGoal;
   const done = miniDone(day);
-  let inner;
-  if (m.type === 'prayer') {
-    inner = `
-      <div class="prayers">
-        ${PRAYERS.map((p) => `
-          <button class="prayer" data-action="prayer" data-id="${p.id}" aria-pressed="${!!day.prayers[p.id]}">
-            ${checkBtn(day.prayers[p.id], `data-check="prayer-${p.id}"`)}
-            <span class="prayer-name">${p.name}</span>
-          </button>`).join('')}
-      </div>`;
-  } else {
-    const action = { clear: 'clear', money: 'money', gym: 'gym' }[m.type] || 'mini';
-    inner = `
-      <button class="check-row" data-action="${action}" aria-pressed="${done}">
-        ${checkBtn(done, `data-check="${action}"`)}
+  // Genau ein Ziel, egal welcher Typ
+  const action = { prayer: 'prayer', clear: 'clear', money: 'money', gym: 'gym' }[m.type] || 'mini';
+  const id = m.type === 'prayer' ? miniPrayer().id : '';
+  const check = m.type === 'prayer' ? `prayer-${id}` : action;
+  const inner = `
+      <button class="check-row" data-action="${action}" ${id ? `data-id="${id}"` : ''} aria-pressed="${done}">
+        ${checkBtn(done, `data-check="${check}"`)}
         <span class="label"><strong>${esc(miniLabel())}</strong><span>${done ? 'Geschafft.' : 'Nur das, sonst nichts.'}</span></span>
       </button>`;
-  }
   return `
     <section class="card">
       <div class="card-head">
         <div class="card-title"><span class="card-icon">${icon.target(18)}</span><h2>Mini-Ziel</h2></div>
-        <div class="card-meta">${done ? '<b>Tag geschafft</b>' : esc(miniLabel())}</div>
+        <div class="card-meta">${done ? '<b>Tag geschafft</b>' : 'Heute nur das'}</div>
       </div>
       <div class="card-body">${inner}</div>
       <div class="card-foot"><span>${done ? 'Der Tag zählt als geschafft.' : 'Wenn das erledigt ist, zählt der Tag.'}</span></div>
@@ -374,12 +370,12 @@ function hardView(day) {
   return `
     ${hero('Heute nur eins.', 'Schwere Tage gibt es. Heute reicht eine Sache.')}
     <div class="stack">
+      ${miniGoalCard(day)}
       <div class="hard-banner">
         <h2>Du fängst nicht bei null an.</h2>
         <p class="muted">Alles andere ist heute ausgeblendet.</p>
         ${whyBlock()}
       </div>
-      ${miniGoalCard(day)}
       ${impulseCard(q, { compact: true })}
       <button class="quick-btn pause" data-action="pause" style="width:100%">
         <span class="ic">${icon.pause(20)}</span><span>Kurze Pause<small>10 Minuten</small></span>

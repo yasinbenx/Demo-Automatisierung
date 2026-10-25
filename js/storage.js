@@ -28,7 +28,8 @@ export function defaultState() {
       // Montag … Sonntag
       gymDays: [true, false, true, false, true, false, false],
       clearName: 'Klar-Tage',
-      miniGoal: { type: 'prayer', label: '' },
+      // Ein einziges Ziel für „Heute ist schwer“. Standard: ein bestimmtes Gebet.
+      miniGoal: { type: 'prayer', prayer: 'isha', label: '' },
       why: '',
       onboarded: false,
       theme: 'system',
